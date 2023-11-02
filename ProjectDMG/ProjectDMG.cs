@@ -1,4 +1,5 @@
-﻿using ProjectDMG.Utils;
+﻿using ProjectDMG.Api;
+using ProjectDMG.Utils;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace ProjectDMG {
         public bool power_switch;
 
         public void POWER_ON(string cartName) {
-            mmu = new MMU();
+            mmu = new MMU(MemoryWatcherProvider.GetInstance());
             cpu = new CPU(mmu);
             ppu = new PPU(window);
             timer = new TIMER();
@@ -51,10 +52,8 @@ namespace ProjectDMG {
             timerCounter.Start();
 
             while (power_switch) {
-
-
                 if (timerCounter.ElapsedMilliseconds > 1000) {
-                    window.Text = "ProjectDMG | FPS: " + fpsCounter;
+                    //window.Text = "ProjectDMG | FPS: " + fpsCounter;
                     timerCounter.Restart();
                     fpsCounter = 0;
                 }

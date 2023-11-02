@@ -1,4 +1,5 @@
-﻿using ProjectDMG.DMG.GamePak;
+﻿using ProjectDMG.Api;
+using ProjectDMG.DMG.GamePak;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,7 @@ namespace ProjectDMG {
         private byte[] OAM = new byte[0xA0];
         private byte[] IO = new byte[0x80];
         private byte[] HRAM = new byte[0x80];
+        private readonly IMemoryWatcher _memoryWatcher;
 
         //Timer IO Regs
         public byte DIV { get { return IO[0x04]; } set { IO[0x04] = value; } } //FF04 - DIV - Divider Register (R/W)
@@ -54,7 +56,7 @@ namespace ProjectDMG {
 
         public byte JOYP { get { return IO[0x00]; } set { IO[0x00] = value; } }//FF00 - JOYP
 
-        public MMU() {
+        public MMU(IMemoryWatcher memoryWatcher) {
             //FF4D - KEY1 - CGB Mode Only - Prepare Speed Switch
             //HardCoded to FF to identify DMG as 00 is GBC
             IO[0x4D] = 0xFF;
@@ -78,6 +80,8 @@ namespace ProjectDMG {
             IO[0x47] = 0xFC;
             IO[0x48] = 0xFF;
             IO[0x49] = 0xFF;
+
+            _memoryWatcher = memoryWatcher;
         }
 
         public byte readByte(ushort addr) {
@@ -194,6 +198,8 @@ namespace ProjectDMG {
                     HRAM[addr & 0x7F] = b;
                     break;
             }
+
+            _memoryWatcher.OnMemoryUpdatedAsync(addr, b);
         }
 
         public ushort readWord(ushort addr) {

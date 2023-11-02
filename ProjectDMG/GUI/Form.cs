@@ -12,6 +12,7 @@ namespace ProjectDMG {
 
         private void Form_Load(object sender, EventArgs e) {
             dmg = new ProjectDMG(this);
+            dmg.POWER_ON("G:\\Desenvolvimento\\CSharp\\ProjectDMG\\Roms\\PokemonRed.gb");
         }
 
         private void Key_Down(object sender, KeyEventArgs e) {
