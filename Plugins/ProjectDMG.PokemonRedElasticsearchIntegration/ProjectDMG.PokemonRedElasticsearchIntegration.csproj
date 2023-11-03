@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetDir)$(ProjectName).dll&quot; &quot;$(SolutionDir)PluginsDlls\$(ProjectName).dll&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ProjectDMG.Api\ProjectDMG.Api.csproj" />
+  </ItemGroup>
+
+</Project>

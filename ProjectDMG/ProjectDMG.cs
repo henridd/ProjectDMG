@@ -1,7 +1,11 @@
 ﻿using ProjectDMG.Api;
 using ProjectDMG.Utils;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace ProjectDMG {
@@ -30,9 +34,41 @@ namespace ProjectDMG {
 
             mmu.loadGamePak(cartName);
 
+            LoadPlugins();
+
             power_switch = true;
 
             Task t = Task.Factory.StartNew(EXECUTE, TaskCreationOptions.LongRunning);
+        }
+
+        private void LoadPlugins()
+        {
+            var pluginInterface = typeof(ProjectDMGPlugin);
+            var solutionFolder = Environment.CurrentDirectory.Substring(0, Environment.CurrentDirectory.IndexOf("ProjectDMG\\bin"));
+            var pluginsFolder = Path.Combine(solutionFolder, "PluginsDlls");
+
+            if (Directory.Exists(pluginsFolder))
+            {
+                var dllFiles = Directory.GetFiles(pluginsFolder, "*.dll");
+
+                foreach (string dllFile in dllFiles)
+                {
+                    try
+                    {
+                        var assembly = Assembly.LoadFrom(dllFile);
+                        foreach (var pluginType in assembly.GetTypes().Where(t => pluginInterface.IsAssignableFrom(t) && !t.IsAbstract))
+                            ((ProjectDMGPlugin)Activator.CreateInstance(pluginType)).Run();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error loading assembly {Path.GetFileName(dllFile)}: {ex.Message}");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Plugins folder not found.");
+            }
         }
 
         public void POWER_OFF() {
