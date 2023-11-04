@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace ProjectDMG {
     public partial class Form : System.Windows.Forms.Form {
 
         ProjectDMG dmg;
+        private string romPath = "G:\\Desenvolvimento\\CSharp\\ProjectDMG\\Roms\\PokemonRed.gb";
 
         public Form() {
             InitializeComponent();
@@ -12,11 +14,63 @@ namespace ProjectDMG {
 
         private void Form_Load(object sender, EventArgs e) {
             dmg = new ProjectDMG(this);
-            dmg.POWER_ON("G:\\Desenvolvimento\\CSharp\\ProjectDMG\\Roms\\PokemonRed.gb");
+            dmg.POWER_ON(romPath);
         }
 
         private void Key_Down(object sender, KeyEventArgs e) {
+            if(e.Control)
+            {
+                if(e.Shift)
+                {
+                    HandleCtrlShiftCommand(e);
+                    return;
+                }
+
+                HandleCtrlCommand(e);
+                return;
+            }
+
             if (dmg.power_switch) dmg.joypad.handleKeyDown(e);
+        }
+
+        private void HandleCtrlCommand(KeyEventArgs e)
+        {
+            switch(e.KeyCode)
+            {
+                case Keys.D1:
+                case Keys.D2:
+                case Keys.D3:
+                    SaveState(e.KeyCode.ToString());
+                    break;
+            }
+        }
+
+        private void HandleCtrlShiftCommand(KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.D1:
+                case Keys.D2:
+                case Keys.D3:
+                    LoadState(e.KeyCode.ToString());
+                    break;
+            }
+        }
+
+        private void LoadState(string fileName)
+        {
+            dmg.POWER_OFF();
+            var state = dmg.LoadSavedState(fileName);
+
+            while (dmg.IsRunning)
+                Thread.Sleep(100);
+
+            dmg.POWER_ON(romPath, state);
+        }
+
+        private void SaveState(string fileName)
+        {
+            dmg.GenerateSaveState(fileName);
         }
 
         private void Key_Up(object sender, KeyEventArgs e) {

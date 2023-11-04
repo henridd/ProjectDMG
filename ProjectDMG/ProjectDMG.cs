@@ -1,4 +1,6 @@
 ﻿using ProjectDMG.Api;
+using ProjectDMG.DMG.State;
+using ProjectDMG.DMG.State.DataStructures;
 using ProjectDMG.Utils;
 using System;
 using System.Collections.Generic;
@@ -6,14 +8,18 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace ProjectDMG {
-    public class ProjectDMG {
+namespace ProjectDMG
+{
+    public class ProjectDMG
+    {
 
         Form window;
 
-        public ProjectDMG(Form window) {
+        public ProjectDMG(Form window)
+        {
             this.window = window;
         }
 
@@ -22,81 +28,70 @@ namespace ProjectDMG {
         private PPU ppu;
         private TIMER timer;
         public JOYPAD joypad;
+        private SaveStateManager saveStateManager;
 
         public bool power_switch;
+        private int cpuCycles;
+        private int cyclesThisUpdate;
+        private object saveLock = new object();
 
-        public void POWER_ON(string cartName) {
-            mmu = new MMU(MemoryWatcherProvider.GetInstance());
-            cpu = new CPU(mmu);
-            ppu = new PPU(window);
-            timer = new TIMER();
+        public bool IsRunning { get; private set; }
+
+        internal void POWER_ON(string cartName)
+            => POWER_ON(cartName, null);
+
+        internal void POWER_ON(string cartName, SavedState state)
+        {
+            mmu = new MMU(MemoryWatcherProvider.GetInstance(), state?.MMUSavedState);
+            cpu = new CPU(mmu, state?.CPUSavedState);
+            ppu = new PPU(window, state?.PPUSavedState);
+            timer = new TIMER(state?.TimerSavedState);
             joypad = new JOYPAD();
+            saveStateManager = new SaveStateManager();
 
-            mmu.loadGamePak(cartName);
+            mmu.loadGamePak(cartName, state?.GamePakSavedState);
 
-            LoadPlugins();
+            PluginLoader.Load();
 
             power_switch = true;
+
+            if (state != null)
+            {
+                cyclesThisUpdate = state.ProjectDMGSavedState.cyclesThisUpdate;
+            }
 
             Task t = Task.Factory.StartNew(EXECUTE, TaskCreationOptions.LongRunning);
         }
 
-        private void LoadPlugins()
+        public void POWER_OFF()
         {
-            var pluginInterface = typeof(ProjectDMGPlugin);
-            var solutionFolder = Environment.CurrentDirectory.Substring(0, Environment.CurrentDirectory.IndexOf("ProjectDMG\\bin"));
-            var pluginsFolder = Path.Combine(solutionFolder, "PluginsDlls");
-
-            if (Directory.Exists(pluginsFolder))
-            {
-                var dllFiles = Directory.GetFiles(pluginsFolder, "*.dll");
-
-                foreach (string dllFile in dllFiles)
-                {
-                    try
-                    {
-                        var assembly = Assembly.LoadFrom(dllFile);
-                        foreach (var pluginType in assembly.GetTypes().Where(t => pluginInterface.IsAssignableFrom(t) && !t.IsAbstract))
-                            ((ProjectDMGPlugin)Activator.CreateInstance(pluginType)).Run();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error loading assembly {Path.GetFileName(dllFile)}: {ex.Message}");
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine("Plugins folder not found.");
-            }
-        }
-
-        public void POWER_OFF() {
             power_switch = false;
         }
 
         int fpsCounter;
 
-        public void EXECUTE() {
+        public void EXECUTE()
+        {
             // Main Loop Work in progress
             long start = nanoTime();
-            long elapsed = 0;
-            int cpuCycles = 0;
-            int cyclesThisUpdate = 0;
 
             var timerCounter = new Stopwatch();
             timerCounter.Start();
+            IsRunning = true;
 
-            while (power_switch) {
-                if (timerCounter.ElapsedMilliseconds > 1000) {
-                    //window.Text = "ProjectDMG | FPS: " + fpsCounter;
-                    timerCounter.Restart();
-                    fpsCounter = 0;
-                }
+            while (power_switch)
+            {
+                lock (saveLock)
+                {
+                    if (timerCounter.ElapsedMilliseconds > 1000)
+                    {
+                        //window.Text = "ProjectDMG | FPS: " + fpsCounter;
+                        timerCounter.Restart();
+                        fpsCounter = 0;
+                    }
 
-                //if ((elapsed - start) >= 16740000) { //nanoseconds per frame
-                //    start += 16740000;
-                    while (cyclesThisUpdate < Constants.CYCLES_PER_UPDATE) {
+                    while (cyclesThisUpdate < Constants.CYCLES_PER_UPDATE)
+                    {
                         cpuCycles = cpu.Exe();
                         cyclesThisUpdate += cpuCycles;
 
@@ -107,20 +102,22 @@ namespace ProjectDMG {
                     }
                     fpsCounter++;
                     cyclesThisUpdate -= Constants.CYCLES_PER_UPDATE;
-                //}
-
-                //elapsed = nanoTime();
-                //if ((elapsed - start) < 15000000) {
-                //    Thread.Sleep(1);
-                //}
+                }
             }
+
+            ppu.Dispose();
+
+            IsRunning = false;
         }
 
-        private void handleInterrupts() {
+        private void handleInterrupts()
+        {
             byte IE = mmu.IE;
             byte IF = mmu.IF;
-            for (int i = 0; i < 5; i++) {
-                if ((((IE & IF) >> i) & 0x1) == 1) {
+            for (int i = 0; i < 5; i++)
+            {
+                if ((((IE & IF) >> i) & 0x1) == 1)
+                {
                     cpu.ExecuteInterrupt(i);
                 }
             }
@@ -128,12 +125,30 @@ namespace ProjectDMG {
             cpu.UpdateIME();
         }
 
-        private static long nanoTime() {
+        private static long nanoTime()
+        {
             long nano = 10000L * Stopwatch.GetTimestamp();
             nano /= TimeSpan.TicksPerMillisecond;
             nano *= 100L;
             return nano;
         }
 
+        internal void GenerateSaveState(string fileName)
+        {
+            lock (saveLock)
+            {
+                var dmgSaveState = new ProjectDMGSavedState()
+                {
+                    cyclesThisUpdate = cyclesThisUpdate,
+                };
+
+                saveStateManager.GenerateSaveState(mmu, cpu, ppu, timer, dmgSaveState, fileName);
+            }
+        }
+
+        internal SavedState LoadSavedState(string fileName)
+        {
+            return saveStateManager.LoadSavedState(fileName);
+        }
     }
 }

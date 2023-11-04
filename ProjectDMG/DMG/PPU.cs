@@ -1,8 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using ProjectDMG.DMG.State.DataStructures;
+using System;
+using System.Runtime.CompilerServices;
 using static ProjectDMG.Utils.BitOps;
 
 namespace ProjectDMG {
-    public class PPU {
+    public class PPU : IDisposable {
 
         private const int SCREEN_WIDTH = 160;
         private const int SCREEN_HEIGHT = 144;
@@ -22,9 +24,14 @@ namespace ProjectDMG {
 
         private Form window;
 
-        public PPU(Form window) {
+        internal PPU(Form window, PPUSavedState savedState) {
             this.window = window;
-            bmp = new DirectBitmap();
+            if(savedState != null)
+            {
+                scanlineCounter = savedState.scanlineCounter;
+            }
+
+            bmp = new DirectBitmap(savedState?.Bits);
             window.pictureBox.Image = bmp.Bitmap;
         }
 
@@ -288,6 +295,18 @@ namespace ProjectDMG {
         private bool isWindow(byte LCDC, byte WY, byte LY) {
             //Bit 5 - Window Display Enable (0=Off, 1=On)
             return isBit(5, LCDC) && WY <= LY;
+        }
+
+        internal PPUSavedState CreateSaveState()
+            => new()
+            {
+                Bits = bmp.Bits,
+                scanlineCounter = scanlineCounter
+            };
+
+        public void Dispose()
+        {
+            bmp.Dispose();
         }
     }
 }

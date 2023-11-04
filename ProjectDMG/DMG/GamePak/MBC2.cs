@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProjectDMG.DMG.State.DataStructures.GamePak;
+using System;
 
 namespace ProjectDMG.DMG.GamePak {
     class MBC2 : IGamePak {
@@ -46,5 +47,14 @@ namespace ProjectDMG.DMG.GamePak {
             }
         }
 
+        public GamePakSavedState GetSavedState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Init(byte[] ROM, GamePakSavedState savedState)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

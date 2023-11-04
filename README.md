@@ -52,6 +52,8 @@ Once power on, Input is mapped as:
 * B: **X** or **K**
 * Start: **V** or **Enter**
 * Select: **C** or **Space**
+* Save state: **CTRL+1-3**
+* Load state: **CTRL+Shift+1-3**
 
 ## Screenshots
 

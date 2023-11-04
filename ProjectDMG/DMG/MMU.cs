@@ -1,23 +1,27 @@
 ﻿using ProjectDMG.Api;
 using ProjectDMG.DMG.GamePak;
+using ProjectDMG.DMG.State.DataStructures;
+using ProjectDMG.DMG.State.DataStructures.GamePak;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using static ProjectDMG.Utils.BitOps;
 
-namespace ProjectDMG {
-    public class MMU {
+namespace ProjectDMG
+{
+    public class MMU
+    {
 
         //GamePak
         private IGamePak gamePak;
 
         //DMG Memory Map
-        private byte[] VRAM = new byte[0x2000];
-        private byte[] WRAM0 = new byte[0x1000];
-        private byte[] WRAM1 = new byte[0x1000];
-        private byte[] OAM = new byte[0xA0];
-        private byte[] IO = new byte[0x80];
-        private byte[] HRAM = new byte[0x80];
+        private byte[] VRAM;
+        private byte[] WRAM0;
+        private byte[] WRAM1;
+        private byte[] OAM;
+        private byte[] IO;
+        private byte[] HRAM;
         private readonly IMemoryWatcher _memoryWatcher;
 
         //Timer IO Regs
@@ -56,36 +60,64 @@ namespace ProjectDMG {
 
         public byte JOYP { get { return IO[0x00]; } set { IO[0x00] = value; } }//FF00 - JOYP
 
-        public MMU(IMemoryWatcher memoryWatcher) {
-            //FF4D - KEY1 - CGB Mode Only - Prepare Speed Switch
-            //HardCoded to FF to identify DMG as 00 is GBC
-            IO[0x4D] = 0xFF;
+        internal MMU(IMemoryWatcher memoryWatcher, MMUSavedState savedState = null)
+        {
+            if(savedState != null)
+            {
+                SetValuesFromState(savedState);
+            }
+            else
+            {
+                VRAM = new byte[0x2000];
+                WRAM0 = new byte[0x1000];
+                WRAM1 = new byte[0x1000];
+                OAM = new byte[0xA0];
+                IO = new byte[0x80];
+                HRAM = new byte[0x80];
 
-            IO[0x10] = 0x80;
-            IO[0x11] = 0xBF;
-            IO[0x12] = 0xF3;
-            IO[0x14] = 0xBF;
-            IO[0x16] = 0x3F;
-            IO[0x19] = 0xBF;
-            IO[0x1A] = 0x7F;
-            IO[0x1B] = 0xFF;
-            IO[0x1C] = 0x9F;
-            IO[0x1E] = 0xBF;
-            IO[0x20] = 0xFF;
-            IO[0x23] = 0xBF;
-            IO[0x24] = 0x77;
-            IO[0x25] = 0xF3;
-            IO[0x26] = 0xF1;
-            IO[0x40] = 0x91;
-            IO[0x47] = 0xFC;
-            IO[0x48] = 0xFF;
-            IO[0x49] = 0xFF;
+                //FF4D - KEY1 - CGB Mode Only - Prepare Speed Switch
+                //HardCoded to FF to identify DMG as 00 is GBC
+                IO[0x4D] = 0xFF;
+
+                IO[0x10] = 0x80;
+                IO[0x11] = 0xBF;
+                IO[0x12] = 0xF3;
+                IO[0x14] = 0xBF;
+                IO[0x16] = 0x3F;
+                IO[0x19] = 0xBF;
+                IO[0x1A] = 0x7F;
+                IO[0x1B] = 0xFF;
+                IO[0x1C] = 0x9F;
+                IO[0x1E] = 0xBF;
+                IO[0x20] = 0xFF;
+                IO[0x23] = 0xBF;
+                IO[0x24] = 0x77;
+                IO[0x25] = 0xF3;
+                IO[0x26] = 0xF1;
+                IO[0x40] = 0x91;
+                IO[0x47] = 0xFC;
+                IO[0x48] = 0xFF;
+                IO[0x49] = 0xFF;
+            }            
+
 
             _memoryWatcher = memoryWatcher;
         }
 
-        public byte readByte(ushort addr) {
-            switch (addr) {                           // General Memory Map 64KB
+        private void SetValuesFromState(MMUSavedState savedState)
+        {
+            VRAM = savedState.VRAM;
+            WRAM0 = savedState.WRAM0;
+            WRAM1 = savedState.WRAM1;
+            OAM = savedState.OAM;
+            IO = savedState.IO;
+            HRAM = savedState.HRAM;
+        }
+
+        public byte readByte(ushort addr)
+        {
+            switch (addr)
+            {                           // General Memory Map 64KB
                 case ushort _ when addr <= 0x3FFF:    //0000-3FFF 16KB ROM Bank 00 (in cartridge, private at bank 00)
                     return gamePak.ReadLoROM(addr);
                 case ushort _ when addr <= 0x7FFF:    // 4000-7FFF 16KB ROM Bank 01..NN(in cartridge, switchable bank number)
@@ -113,46 +145,12 @@ namespace ProjectDMG {
                 default:
                     return 0xFF;
             }
-
-            //tests to simplify reads... somehow they are slower :\
-            //ushort add = (ushort)(addr >> 12);
-            //switch (add) {
-            //    case 0x0:
-            //    case 0x1:
-            //    case 0x2:
-            //    case 0x3:return gamePak.ReadLoROM(addr);
-            //    case 0x4:
-            //    case 0x5:
-            //    case 0x6:
-            //    case 0x7: return gamePak.ReadHiROM(addr);
-            //    case 0x8:
-            //    case 0x9: return VRAM[addr & 0x1FFF];
-            //    case 0xA:
-            //    case 0xB: return gamePak.ReadERAM(addr);
-            //    case 0xC: return WRAM0[addr & 0xFFF];
-            //    case 0xD: return WRAM1[addr & 0xFFF];
-            //    case 0xE: return WRAM0[addr & 0xFFF];
-            //    case 0xF:
-            //        switch (addr) {
-            //            case ushort _ when addr <= 0xFDFF:    // E000-FDFF Same as 0xC000-DDFF(ECHO)
-            //                return WRAM1[addr & 0xFFF];
-            //            case ushort _ when addr <= 0xFE9F:    // FE00-FE9F Sprite Attribute Table(OAM)
-            //                return OAM[addr - 0xFE00];
-            //            case ushort _ when addr <= 0xFEFF:    // FEA0-FEFF Not Usable 0
-            //                return 0x00;
-            //            case ushort _ when addr <= 0xFF7F:    // FF00-FF7F IO Ports
-            //                return IO[addr & 0x7F];
-            //            case ushort _ when addr <= 0xFFFF:    // FF80-FFFE High RAM(HRAM)
-            //                return HRAM[addr & 0x7F];
-            //            default:
-            //                return 0xFF;
-            //        }
-            //    default: return 0xFF;
-            //}
         }
 
-        public void writeByte(ushort addr, byte b) {
-            switch (addr) {                            // General Memory Map 64KB
+        public void writeByte(ushort addr, byte b)
+        {
+            switch (addr)
+            {                            // General Memory Map 64KB
                 case ushort _ when addr <= 0x7FFF:     //0000-3FFF 16KB ROM Bank 00 (in cartridge, private at bank 00) 4000-7FFF 16KB ROM Bank 01..NN(in cartridge, switchable bank number)
                     gamePak.WriteROM(addr, b);
                     break;
@@ -181,7 +179,8 @@ namespace ProjectDMG {
                     //Console.WriteLine("Warning: Tried to write to NOT USABLE space");
                     break;
                 case ushort _ when addr <= 0xFF7F:    // FF00-FF7F IO Ports
-                    switch (addr) {
+                    switch (addr)
+                    {
                         case 0xFF0F: b |= 0xE0; break; // IF returns 1 on first 3 unused bits
                         case 0xFF04:                //DIV on write = 0
                         case 0xFF44: b = 0; break;  //LY on write = 0
@@ -202,60 +201,84 @@ namespace ProjectDMG {
             _memoryWatcher.OnMemoryUpdatedAsync(addr, b);
         }
 
-        public ushort readWord(ushort addr) {
+        public ushort readWord(ushort addr)
+        {
             return (ushort)(readByte((ushort)(addr + 1)) << 8 | readByte(addr));
         }
 
-        public void writeWord(ushort addr, ushort w) {
+        public void writeWord(ushort addr, ushort w)
+        {
             writeByte((ushort)(addr + 1), (byte)(w >> 8));
             writeByte(addr, (byte)w);
         }
 
-        public byte readOAM(int addr) {
+        public byte readOAM(int addr)
+        {
             return OAM[addr];
         }
 
-        public byte readVRAM(int addr) {
+        public byte readVRAM(int addr)
+        {
             return VRAM[addr & 0x1FFF];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void requestInterrupt(byte b) {
+        public void requestInterrupt(byte b)
+        {
             IF = bitSet(b, IF);
         }
 
-        private void DMA(byte b) {
+        private void DMA(byte b)
+        {
             ushort addr = (ushort)(b << 8);
-            for (byte i = 0; i < OAM.Length; i++) {
+            for (byte i = 0; i < OAM.Length; i++)
+            {
                 OAM[i] = readByte((ushort)(addr + i));
             }
         }
 
-        public void loadGamePak(String cartName) {
+        // TODO implement saved state for other gamepaks
+        internal void loadGamePak(String cartName, GamePakSavedState savedState)
+        {
             byte[] rom = File.ReadAllBytes(cartName);
-            switch (rom[0x147]) {
+            switch (rom[0x147])
+            {
                 case 0x00:
                     gamePak = new MBC0();
                     break;
-                case 0x01: case 0x02: case 0x03:
+                case 0x01:
+                case 0x02:
+                case 0x03:
                     gamePak = new MBC1();
                     break;
-                case 0x05: case 0x06:
+                case 0x05:
+                case 0x06:
                     gamePak = new MBC2();
                     break;
-                case 0x0F: case 0x10: case 0x11: case 0x12: case 0x13:
+                case 0x0F:
+                case 0x10:
+                case 0x11:
+                case 0x12:
+                case 0x13:
                     gamePak = new MBC3();
                     break;
-                case 0x19: case 0x1A: case 0x1B:
+                case 0x19:
+                case 0x1A:
+                case 0x1B:
                     gamePak = new MBC5();
                     break;
                 default:
                     Console.WriteLine("Unsupported MBC: " + rom[0x147].ToString("x2"));
                     break;
             }
-            gamePak.Init(rom);
+            gamePak.Init(rom, savedState);
         }
 
+        internal MMUSavedState CreateSaveState()
+            => new(VRAM, WRAM0, WRAM1, OAM, IO, HRAM);
+
+        internal GamePakSavedState CreateGamePakSaveState()
+            => gamePak.GetSavedState();
     }
 }
 

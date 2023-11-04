@@ -14,8 +14,11 @@ namespace ProjectDMG {
 
         protected GCHandle BitsHandle { get; private set; }
 
-        public DirectBitmap() {
-            Bits = new Int32[Width * Height];
+        public DirectBitmap() : this(null) { }
+
+        public DirectBitmap(Int32[] bits)
+        {
+            Bits = bits ?? new Int32[Width * Height];
             BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
             Bitmap = new Bitmap(Width, Height, Width * 4, PixelFormat.Format32bppRgb, BitsHandle.AddrOfPinnedObject());
         }

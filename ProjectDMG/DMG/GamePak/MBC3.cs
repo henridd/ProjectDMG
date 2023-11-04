@@ -1,12 +1,13 @@
-﻿using System;
+﻿using ProjectDMG.DMG.State.DataStructures.GamePak;
+using System;
 
 namespace ProjectDMG.DMG.GamePak {
     class MBC3 : IGamePak {
 
         private byte[] ROM;
-        private byte[] ERAM = new byte[0x8000]; //MBC1 MAX ERAM on 4 banks
+        private byte[] ERAM; //MBC1 MAX ERAM on 4 banks
         private bool ERAM_ENABLED;
-        private int ROM_BANK = 1; //default as 0 is 0x0000 - 0x3FFF fixed
+        private int ROM_BANK; 
         private int RAM_BANK;
         private const int ROM_OFFSET = 0x4000;
         private const int ERAM_OFFSET = 0x2000;
@@ -20,8 +21,29 @@ namespace ProjectDMG.DMG.GamePak {
         private byte RTC_6;  //Bit 6  Halt(0=Active, 1=Stop Timer)
         private byte RTC_7;  //Bit 7  Day Counter Carry Bit(1=Counter Overflow)
 
-        public void Init(byte[] ROM) {
+        public void Init(byte[] ROM, GamePakSavedState savedState) {
             this.ROM = ROM;
+
+            if(savedState is MBC3SavedState mBC3SavedState)
+            {
+                ERAM = mBC3SavedState.ERAM;
+                ERAM_ENABLED = mBC3SavedState.ERAM_ENABLED;
+                ROM_BANK = mBC3SavedState.ROM_BANK;
+                RAM_BANK = mBC3SavedState.RAM_BANK;
+                RTC_0 = mBC3SavedState.RTC_0;
+                RTC_6 = mBC3SavedState.RTC_6;
+                RTC_7   = mBC3SavedState.RTC_7;
+                RTC_DH = mBC3SavedState.RTC_DH;
+                RTC_DL = mBC3SavedState.RTC_DL;
+                RTC_H = mBC3SavedState.RTC_H;
+                RTC_M = mBC3SavedState.RTC_M;
+                RTC_S = mBC3SavedState.RTC_S;
+            }
+            else
+            {
+                ERAM = new byte[0x8000];
+                ROM_BANK = 1; //default as 0 is 0x0000 - 0x3FFF fixed
+            }
         }
 
         public byte ReadERAM(ushort addr) {
@@ -109,5 +131,23 @@ namespace ProjectDMG.DMG.GamePak {
             }
         }
 
+        public GamePakSavedState GetSavedState()
+        {
+            return new MBC3SavedState()
+            {
+                ERAM = ERAM,
+                ERAM_ENABLED = ERAM_ENABLED,
+                ROM_BANK = ROM_BANK,
+                RAM_BANK = RAM_BANK,
+                RTC_S = RTC_S,
+                RTC_M = RTC_M,
+                RTC_H = RTC_H,
+                RTC_DL = RTC_DL,
+                RTC_DH = RTC_DH,
+                RTC_0 = RTC_0,
+                RTC_6 = RTC_6,
+                RTC_7 = RTC_7
+            };
+        }
     }
 }

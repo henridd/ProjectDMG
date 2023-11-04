@@ -1,4 +1,6 @@
-﻿namespace ProjectDMG.DMG.GamePak {
+﻿using ProjectDMG.DMG.State.DataStructures.GamePak;
+
+namespace ProjectDMG.DMG.GamePak {
     class MBC0 : IGamePak {
 
         private byte[] ROM;
@@ -25,6 +27,16 @@
 
         public void WriteROM(ushort addr, byte value) {
             //MBC0 should ignore writes
+        }
+
+        public GamePakSavedState GetSavedState()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Init(byte[] ROM, GamePakSavedState savedState)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

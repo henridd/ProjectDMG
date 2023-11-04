@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProjectDMG.DMG.State.DataStructures.GamePak;
+using System;
 
 namespace ProjectDMG.DMG.GamePak {
     class MBC1 : IGamePak {
@@ -63,6 +64,16 @@ namespace ProjectDMG.DMG.GamePak {
                     BANKING_MODE = value & 0x1;
                     break;
             }
+        }
+
+        public GamePakSavedState GetSavedState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Init(byte[] ROM, GamePakSavedState savedState)
+        {
+            throw new NotImplementedException();
         }
     }
 }
