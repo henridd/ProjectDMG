@@ -24,6 +24,8 @@ namespace ProjectDMG.Api.Notifications
         ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(ushort subscribedAddress, IEnumerable<ushort> relevantAddresses);
 
         ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(string subscribedAddressInHex, IEnumerable<ushort> relevantAddresses);
+
+        void OnCycleFinished();
     }
 
     public class MemoryWatcher : IMemoryWatcher
@@ -81,6 +83,11 @@ namespace ProjectDMG.Api.Notifications
 
                 _memoryAddressUpdateNotifier.UpdateChannel(subscription.Id, subscription.SubscribedAddress, values);
             }
+        }
+
+        public void OnCycleFinished()
+        {
+            _memoryAddressUpdateNotifier.OnCycleFinished();
         }
 
         public void Dispose()

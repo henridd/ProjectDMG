@@ -99,6 +99,7 @@ namespace ProjectDMG
                     }
                     fpsCounter++;
                     cyclesThisUpdate -= Constants.CYCLES_PER_UPDATE;
+                    memoryWatcher.OnCycleFinished();
                 }
             }
 

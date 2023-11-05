@@ -7,6 +7,8 @@ namespace ProjectDMG.Api.Notifications
     internal class MemoryAddressUpdateNotifier : IDisposable
     {
         private readonly Dictionary<int, ObservableStack<MemoryAddressUpdatedNotification>> _channels = new();
+        private readonly Queue<QueuedNotification> _queuedNotifications = new();
+        private object _lock = new object();
 
         public ObservableStack<MemoryAddressUpdatedNotification> AddChannel(int id)
         {
@@ -21,7 +23,7 @@ namespace ProjectDMG.Api.Notifications
         {
             var notification = new MemoryAddressUpdatedNotification(
                 values.ToDictionary(
-                    x => x.Key.ToString("X"), 
+                    x => x.Key.ToString("X"),
                     x => new MemoryAddressValueUpdate(
                         GetPreviousValue(x.Key),
                         x.Value)));
@@ -32,13 +34,14 @@ namespace ProjectDMG.Api.Notifications
                 return;
             }
 
-            _channels[id].Push(notification);
+            lock(_lock)
+                _queuedNotifications.Enqueue(new(id, notification));
 
             byte GetPreviousValue(ushort address)
             {
                 if (_channels[id].Count == 0)
                 {
-                    return 0;    
+                    return 0;
                 }
 
                 var previousNotification = _channels[id].Peek();
@@ -49,6 +52,31 @@ namespace ProjectDMG.Api.Notifications
         public void Dispose()
         {
             _channels.Clear();
+        }
+
+        internal void OnCycleFinished()
+        {
+            lock (_lock)
+            {
+                while (_queuedNotifications.Count > 0)
+                {
+                    var notification = _queuedNotifications.Dequeue();
+                    _channels[notification.Channel].Push(notification.Notification);
+
+                }
+            }
+        }
+
+        private readonly struct QueuedNotification
+        {
+            public int Channel { get; }
+            public MemoryAddressUpdatedNotification Notification { get; }
+
+            public QueuedNotification(int channel, MemoryAddressUpdatedNotification notification)
+            {
+                Channel = channel;
+                Notification = notification;
+            }
         }
     }
 }
