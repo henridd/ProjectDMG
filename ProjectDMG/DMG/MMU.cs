@@ -1,4 +1,4 @@
-﻿using ProjectDMG.Api;
+﻿using ProjectDMG.Api.Notifications;
 using ProjectDMG.DMG.GamePak;
 using ProjectDMG.DMG.State.DataStructures;
 using ProjectDMG.DMG.State.DataStructures.GamePak;
@@ -198,7 +198,7 @@ namespace ProjectDMG
                     break;
             }
 
-            _memoryWatcher.OnMemoryUpdatedAsync(addr, b);
+            _memoryWatcher.OnMemoryWrittenAsync(addr, b);
         }
 
         public ushort readWord(ushort addr)

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ProjectDMG.Api
+namespace ProjectDMG.Api.Notifications
 {
     public readonly struct MemoryAddressSubscription
     {

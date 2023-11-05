@@ -1,4 +1,4 @@
-﻿namespace ProjectDMG.Api
+﻿namespace ProjectDMG.Api.Notifications
 {
     public static class MemoryWatcherProvider
     {
@@ -6,6 +6,11 @@
 
         public static IMemoryWatcher GetInstance()
         {
+            if(_instance.IsDisposed)
+            {
+                _instance = new MemoryWatcher();
+            }
+
             return _instance;
         }
     }

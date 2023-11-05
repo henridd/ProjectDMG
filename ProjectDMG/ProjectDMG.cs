@@ -1,14 +1,9 @@
-﻿using ProjectDMG.Api;
+﻿using ProjectDMG.Api.Notifications;
 using ProjectDMG.DMG.State;
 using ProjectDMG.DMG.State.DataStructures;
 using ProjectDMG.Utils;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProjectDMG
@@ -29,6 +24,7 @@ namespace ProjectDMG
         private TIMER timer;
         public JOYPAD joypad;
         private SaveStateManager saveStateManager;
+        private IMemoryWatcher memoryWatcher;
 
         public bool power_switch;
         private int cpuCycles;
@@ -42,7 +38,8 @@ namespace ProjectDMG
 
         internal void POWER_ON(string cartName, SavedState state)
         {
-            mmu = new MMU(MemoryWatcherProvider.GetInstance(), state?.MMUSavedState);
+            memoryWatcher = MemoryWatcherProvider.GetInstance();
+            mmu = new MMU(memoryWatcher, state?.MMUSavedState);
             cpu = new CPU(mmu, state?.CPUSavedState);
             ppu = new PPU(window, state?.PPUSavedState);
             timer = new TIMER(state?.TimerSavedState);
@@ -105,6 +102,7 @@ namespace ProjectDMG
                 }
             }
 
+            memoryWatcher.Dispose();
             ppu.Dispose();
 
             IsRunning = false;
