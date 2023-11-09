@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ProjectDMG.Api.Notifications
 {
@@ -21,9 +22,7 @@ namespace ProjectDMG.Api.Notifications
         /// <param name="subscribedAddress">Address to listen for changes</param>
         /// <param name="relevantAddresses">Other relevant addresses that should be included in the response</param>
         /// <returns></returns>
-        ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(ushort subscribedAddress, IEnumerable<ushort> relevantAddresses);
-
-        ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(string subscribedAddressInHex, IEnumerable<ushort> relevantAddresses);
+        ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(AddressRange subscribedAddresses, IEnumerable<AddressRange> relevantAddresses);
 
         void OnCycleFinished();
     }
@@ -32,7 +31,7 @@ namespace ProjectDMG.Api.Notifications
     {
         //TODO Change to ConcurrentDictionary
         private readonly Dictionary<ushort, byte> _currentValues = new();
-        private readonly Dictionary<ushort, List<MemoryAddressSubscription>> _addressSubscriptions = new();
+        private readonly Dictionary<AddressRange, List<MemoryAddressSubscription>> _addressSubscriptions = new();
 
         private readonly MemoryAddressUpdateNotifier _memoryAddressUpdateNotifier = new();
 
@@ -45,28 +44,20 @@ namespace ProjectDMG.Api.Notifications
 
         }
 
-        //TODO Accept address range
-        public ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(string subscribedAddressInHex, IEnumerable<ushort> relevantAddresses)
+        public ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(AddressRange subscribedAddresses, IEnumerable<AddressRange> relevantAddresses)
         {
-            var address = Convert.ToUInt16(subscribedAddressInHex, 16);
+            if (!_addressSubscriptions.ContainsKey(subscribedAddresses))
+                _addressSubscriptions.Add(subscribedAddresses, new List<MemoryAddressSubscription>());
 
-            return AddSubscription(address, relevantAddresses);
-        }
-
-        public ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(ushort subscribedAddress, IEnumerable<ushort> relevantAddresses)
-        {
-            if (!_addressSubscriptions.ContainsKey(subscribedAddress))
-                _addressSubscriptions.Add(subscribedAddress, new List<MemoryAddressSubscription>());
-
-            var subscription = CreateSubscription(subscribedAddress, relevantAddresses);
+            var subscription = CreateSubscription(subscribedAddresses, relevantAddresses);
 
             return _memoryAddressUpdateNotifier.AddChannel(subscription.Id);
         }
 
-        private MemoryAddressSubscription CreateSubscription(ushort subscribedAddress, IEnumerable<ushort> relevantAddresses)
+        private MemoryAddressSubscription CreateSubscription(AddressRange subscribedAddresses, IEnumerable<AddressRange> relevantAddresses)
         {
-            var subscription = new MemoryAddressSubscription(_lastId++, subscribedAddress, relevantAddresses);
-            _addressSubscriptions[subscribedAddress].Add(subscription);
+            var subscription = new MemoryAddressSubscription(_lastId++, subscribedAddresses, relevantAddresses);
+            _addressSubscriptions[subscribedAddresses].Add(subscription);
             return subscription;
         }
 
@@ -74,15 +65,41 @@ namespace ProjectDMG.Api.Notifications
         {
             _currentValues[address] = newValue;
 
-            if (!_addressSubscriptions.ContainsKey(address))
-                return;
-
-            foreach (var subscription in _addressSubscriptions[address])
+            foreach (var subscriptionList in _addressSubscriptions.Where(x => x.Key.MemoryAddresses.Contains(address)))
             {
-                var values = _currentValues.Where(x => subscription.RelevantAddresses.Contains(x.Key) || subscription.SubscribedAddress == x.Key);
+                foreach(var subscription in subscriptionList.Value)
+                {
+                    var addressesToFetchValues = subscription.RelevantAddresses.ToList();
+                    addressesToFetchValues.Add(subscription.SubscribedAddresses);
 
-                _memoryAddressUpdateNotifier.UpdateChannel(subscription.Id, subscription.SubscribedAddress, values);
+                    var valuesList = GetAddressValues(subscriptionList, addressesToFetchValues);
+
+                    _memoryAddressUpdateNotifier.UpdateChannel(subscription.Id, subscriptionList.Key, valuesList);
+                }
             }
+        }
+
+        //TODO If performance sucks, optimize by adding address ranges to a local cache 
+        private List<AddressRangeValue> GetAddressValues(KeyValuePair<AddressRange, List<MemoryAddressSubscription>> subscriptionList, List<AddressRange> addressesToFetchValues)
+        {
+            var valuesList = new List<AddressRangeValue>();
+            foreach (var addresses in addressesToFetchValues)
+            {
+                var values = new AddressRangeValue(subscriptionList.Key, addresses.MemoryAddresses.Select(x => GetValueFromCurrentValuesOrDefault(x)));
+                valuesList.Add(values);
+            }
+
+            return valuesList;
+        }
+
+        private byte GetValueFromCurrentValuesOrDefault(ushort x)
+        {
+            if (!_currentValues.ContainsKey(x))
+            {
+                return 0;
+            }
+
+            return _currentValues[x];
         }
 
         public void OnCycleFinished()

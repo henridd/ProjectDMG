@@ -19,33 +19,32 @@ namespace ProjectDMG.Api.Notifications
             return observableStack;
         }
 
-        public void UpdateChannel(int id, ushort subscribedAddress, IEnumerable<KeyValuePair<ushort, byte>> values)
+        public void UpdateChannel(int id, AddressRange subscribedAddress, IEnumerable<AddressRangeValue> values)
         {
             var notification = new MemoryAddressUpdatedNotification(
                 values.ToDictionary(
-                    x => x.Key.ToString("X"),
+                    x => x.AddressRange,
                     x => new MemoryAddressValueUpdate(
-                        GetPreviousValue(x.Key),
-                        x.Value)));
+                        GetPreviousValue(x.AddressRange),
+                        x.Values.ToArray())));
 
-            var subscribedAddressHex = subscribedAddress.ToString("X");
-            if (notification.AddressesValues[subscribedAddressHex].PreviousValue == notification.AddressesValues[subscribedAddressHex].NewValue)
+            if (notification.AddressesValues[subscribedAddress].PreviousValue == notification.AddressesValues[subscribedAddress].NewValue)
             {
                 return;
             }
 
-            lock(_lock)
+            lock (_lock)
                 _queuedNotifications.Enqueue(new(id, notification));
 
-            byte GetPreviousValue(ushort address)
+            byte[] GetPreviousValue(AddressRange address)
             {
                 if (_channels[id].Count == 0)
                 {
-                    return 0;
+                    return new byte[0];
                 }
 
                 var previousNotification = _channels[id].Peek();
-                return previousNotification.AddressesValues[address.ToString("X")].NewValue;
+                return previousNotification.AddressesValues[address].NewValue;
             }
         }
 

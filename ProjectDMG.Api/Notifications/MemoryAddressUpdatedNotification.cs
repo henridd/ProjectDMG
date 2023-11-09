@@ -4,9 +4,9 @@ namespace ProjectDMG.Api.Notifications
 {
     public readonly struct MemoryAddressUpdatedNotification
     {
-        public Dictionary<string, MemoryAddressValueUpdate> AddressesValues { get; }
+        public Dictionary<AddressRange, MemoryAddressValueUpdate> AddressesValues { get; }
 
-        public MemoryAddressUpdatedNotification(Dictionary<string, MemoryAddressValueUpdate> addressesValues)
+        public MemoryAddressUpdatedNotification(Dictionary<AddressRange, MemoryAddressValueUpdate> addressesValues)
         {
             AddressesValues = addressesValues;
         }

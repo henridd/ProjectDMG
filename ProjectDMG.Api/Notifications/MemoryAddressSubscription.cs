@@ -1,18 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ProjectDMG.Api.Notifications
 {
     public readonly struct MemoryAddressSubscription
     {
         public int Id { get; }
-        public ushort SubscribedAddress { get; }
-        public IEnumerable<ushort> RelevantAddresses { get; }
+        public AddressRange SubscribedAddresses { get; }
+        public IEnumerable<AddressRange> RelevantAddresses { get; }
 
-        public MemoryAddressSubscription(int id, ushort subscribedAddress, IEnumerable<ushort> relevantAddresses)
+        public MemoryAddressSubscription(int id, AddressRange subscribedAddresses, IEnumerable<AddressRange> relevantAddresses)
         {
             Id = id;
-            SubscribedAddress = subscribedAddress;
-            RelevantAddresses = relevantAddresses ?? new ushort[0];
+            SubscribedAddresses = subscribedAddresses;
+            RelevantAddresses = relevantAddresses ?? Array.Empty<AddressRange>();
         }
     }
 }
