@@ -23,8 +23,6 @@ namespace ProjectDMG.Api.Notifications
         /// <param name="relevantAddresses">Other relevant addresses that should be included in the response</param>
         /// <returns></returns>
         ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(AddressRange subscribedAddresses, IEnumerable<AddressRange> relevantAddresses);
-
-        void OnCycleFinished();
     }
 
     public class MemoryWatcher : IMemoryWatcher
@@ -100,11 +98,6 @@ namespace ProjectDMG.Api.Notifications
             }
 
             return _currentValues[x];
-        }
-
-        public void OnCycleFinished()
-        {
-            _memoryAddressUpdateNotifier.OnCycleFinished();
         }
 
         public void Dispose()
