@@ -72,7 +72,7 @@ namespace ProjectDMG.Api.Notifications
 
                     var valuesList = GetAddressValues(subscriptionList, addressesToFetchValues);
 
-                    _memoryAddressUpdateNotifier.UpdateChannel(subscription.Id, subscriptionList.Key, valuesList);
+                    _memoryAddressUpdateNotifier.UpdateChannel(subscription.Id, subscriptionList.Key, valuesList, address);
                 }
             }
         }
