@@ -1,6 +1,5 @@
 ﻿using ProjectDMG.Api;
 using ProjectDMG.Api.Notifications;
-using System;
 using System.Diagnostics;
 using System.Linq;
 
@@ -8,11 +7,13 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
 {
     public class Bootstrapper : ProjectDMGPlugin
     {
+        private AddressRange _enemyPokemonNameAddressRange;
+
         public override void Run()
         {
             var memoryWatcher = MemoryWatcherProvider.GetInstance();
 
-            var enemyNameRange = new AddressRange(new []
+            _enemyPokemonNameAddressRange = new AddressRange(new[]
             {
                 MemoryAddresses.EnemyName1,
                 MemoryAddresses.EnemyName2,
@@ -25,7 +26,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
                 MemoryAddresses.EnemyName9,
                 MemoryAddresses.EnemyName10,
             });
-            memoryWatcher.AddSubscription(enemyNameRange, null).ItemAdded += EnemyNameChanged;
+            memoryWatcher.AddSubscription(_enemyPokemonNameAddressRange, null).ItemAdded += EnemyNameChanged;
 
             var moneyRange = new AddressRange(new[]
             {
@@ -48,13 +49,13 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
 
         private void EnemyNameChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
         {
-            Debug.WriteLine("Enemy name changed");
+            Debug.WriteLine($"Enemy name changed: {ByteToCharConverter.Convert(e.Item.AddressesValues[_enemyPokemonNameAddressRange].NewValue)}");
         }
 
         private void TurnNumberChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
         {
             var turnAddressUpdate = e.Item.AddressesValues[MemoryAddresses.TurnNumber];
-            if(turnAddressUpdate.NewValue.First() == 0)
+            if (turnAddressUpdate.NewValue.First() == 0)
             {
                 Debug.WriteLine("Battle started!");
                 return;
