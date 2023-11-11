@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace ProjectDMG.Api.Notifications
 {
@@ -35,7 +35,7 @@ namespace ProjectDMG.Api.Notifications
 
         private int _lastId = 0;
 
-        public bool IsDisposed { get; private set;  }
+        public bool IsDisposed { get; private set; }
 
         internal MemoryWatcher()
         {
@@ -65,7 +65,7 @@ namespace ProjectDMG.Api.Notifications
 
             foreach (var subscriptionList in _addressSubscriptions.Where(x => x.Key.MemoryAddresses.Contains(address)))
             {
-                foreach(var subscription in subscriptionList.Value)
+                foreach (var subscription in subscriptionList.Value)
                 {
                     var addressesToFetchValues = subscription.RelevantAddresses.ToList();
                     addressesToFetchValues.Add(subscription.SubscribedAddresses);
@@ -83,7 +83,7 @@ namespace ProjectDMG.Api.Notifications
             var valuesList = new List<AddressRangeValue>();
             foreach (var addresses in addressesToFetchValues)
             {
-                var values = new AddressRangeValue(subscriptionList.Key, addresses.MemoryAddresses.Select(x => GetValueFromCurrentValuesOrDefault(x)));
+                var values = new AddressRangeValue(addresses, addresses.MemoryAddresses.Select(x => GetValueFromCurrentValuesOrDefault(x)));
                 valuesList.Add(values);
             }
 
