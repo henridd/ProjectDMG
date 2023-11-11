@@ -51,7 +51,7 @@ namespace ProjectDMG.Api.Notifications
                     var addressesToFetchValues = subscription.RelevantAddresses.ToList();
                     addressesToFetchValues.Add(subscription.SubscribedAddresses);
 
-                    var valuesList = GetAddressValues(subscriptionList, addressesToFetchValues);
+                    var valuesList = GetAddressValues(addressesToFetchValues);
 
                     _memoryAddressUpdateNotifier.UpdateChannel(subscription.Id, subscriptionList.Key, valuesList, address);
                 }
@@ -59,7 +59,7 @@ namespace ProjectDMG.Api.Notifications
         }
 
         //TODO If performance sucks, optimize by adding address ranges to a local cache 
-        private List<AddressRangeValue> GetAddressValues(KeyValuePair<AddressRange, List<MemoryAddressSubscription>> subscriptionList, List<AddressRange> addressesToFetchValues)
+        private List<AddressRangeValue> GetAddressValues(List<AddressRange> addressesToFetchValues)
         {
             var valuesList = new List<AddressRangeValue>();
             foreach (var addresses in addressesToFetchValues)
