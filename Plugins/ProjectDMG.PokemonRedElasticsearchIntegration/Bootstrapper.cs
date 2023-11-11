@@ -26,7 +26,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
                 MemoryAddresses.EnemyName9,
                 MemoryAddresses.EnemyName10,
             });
-            memoryWatcher.AddSubscription(_enemyPokemonNameAddressRange, null).ItemAdded += EnemyNameChanged;
+            memoryWatcher.AddSubscription(_enemyPokemonNameAddressRange, new AddressRange[1] { MemoryAddresses.CurrentMap }).ItemAdded += EnemyNameChanged;
 
             var moneyRange = new AddressRange(new[]
             {
@@ -49,7 +49,8 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
 
         private void EnemyNameChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
         {
-            Debug.WriteLine($"Enemy name changed: {ByteToCharConverter.Convert(e.Item.AddressesValues[_enemyPokemonNameAddressRange].NewValue)}");
+            Debug.WriteLine($"Enemy name changed: {ByteToCharConverter.Convert(e.Item.AddressesValues[_enemyPokemonNameAddressRange].NewValue)}" +
+                $" on map {ByteToLocationNameConverter.Convert(e.Item.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First())}");
         }
 
         private void TurnNumberChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
