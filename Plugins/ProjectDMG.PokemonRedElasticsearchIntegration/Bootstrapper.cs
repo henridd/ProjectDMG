@@ -1,5 +1,6 @@
 ﻿using ProjectDMG.Api;
 using ProjectDMG.Api.Notifications;
+using ProjectDMG.PokemonRedElasticsearchIntegration.Converters;
 using System.Diagnostics;
 using System.Linq;
 
@@ -8,6 +9,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
     public class Bootstrapper : ProjectDMGPlugin
     {
         private AddressRange _enemyPokemonNameAddressRange;
+        private AddressRange _moneyAddressRange;
 
         public override void Run()
         {
@@ -28,51 +30,27 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
             });
             memoryWatcher.AddSubscription(_enemyPokemonNameAddressRange, new AddressRange[1] { MemoryAddresses.CurrentMap }).ItemAdded += EnemyNameChanged;
 
-            var moneyRange = new AddressRange(new[]
+            _moneyAddressRange = new AddressRange(new[]
             {
                 MemoryAddresses.Money1,
                 MemoryAddresses.Money2,
                 MemoryAddresses.Money3
             });
-            memoryWatcher.AddSubscription(moneyRange, null).ItemAdded += MoneyChanged;
-
-            memoryWatcher.AddSubscription(MemoryAddresses.TurnNumber, null).ItemAdded += TurnNumberChanged;
-            memoryWatcher.AddSubscription(MemoryAddresses.Pokemon1HP, null).ItemAdded += OnPlayerHPChanged;
-            memoryWatcher.AddSubscription(MemoryAddresses.EnemyHP, null).ItemAdded += OnEnemyHPChanged;
-
+            memoryWatcher.AddSubscription(_moneyAddressRange, null).ItemAdded += MoneyChanged;
         }
 
         private void MoneyChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
         {
-            Debug.WriteLine("Money name changed");
+            var newHexValues = e.Item.AddressesValues[_moneyAddressRange].NewValue.Select(x => x.ToString("X"));
+            var moneyInString = string.Join(string.Empty, newHexValues);
+
+            Debug.WriteLine($"Your money has changed! New value: {int.Parse(moneyInString)}");
         }
 
         private void EnemyNameChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
         {
-            Debug.WriteLine($"Enemy name changed: {ByteToCharConverter.Convert(e.Item.AddressesValues[_enemyPokemonNameAddressRange].NewValue)}" +
+            Debug.WriteLine($"Enemy found: {ByteToCharConverter.Convert(e.Item.AddressesValues[_enemyPokemonNameAddressRange].NewValue)}" +
                 $" on map {ByteToLocationNameConverter.Convert(e.Item.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First())}");
-        }
-
-        private void TurnNumberChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
-        {
-            var turnAddressUpdate = e.Item.AddressesValues[MemoryAddresses.TurnNumber];
-            if (turnAddressUpdate.NewValue.First() == 0)
-            {
-                Debug.WriteLine("Battle started!");
-                return;
-            }
-
-            Debug.WriteLine($"Starting turn {turnAddressUpdate.NewValue}");
-        }
-
-        private void OnEnemyHPChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
-        {
-            Debug.WriteLine($"EnemyHP changed. {e.Item.AddressesValues[MemoryAddresses.EnemyHP].PreviousValue} --> {e.Item.AddressesValues[MemoryAddresses.EnemyHP].NewValue}");
-        }
-
-        private void OnPlayerHPChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
-        {
-            Debug.WriteLine($"Pokemon1HP changed. {e.Item.AddressesValues[MemoryAddresses.Pokemon1HP].PreviousValue} --> {e.Item.AddressesValues[MemoryAddresses.Pokemon1HP].NewValue}");
         }
     }
 }

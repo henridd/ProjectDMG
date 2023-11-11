@@ -20,11 +20,17 @@
         public const string EnemyName7 = "CFE0";
         public const string EnemyName8 = "CFE1";
         public const string EnemyName9 = "CFE2";
-        public const string EnemyName10 = "CFE3";
+        public const string EnemyName10 = "CFE3";        
 
-        public const string BattleType = "D05A";
-        public const string TurnNumber = "CCD5";
+        public const string EnemyCatchRate = "D007";
         public const string EnemyHP = "CFE7";
+        public const string EnemyLevel = "CFE8";
+        public const string EnemyPrimaryType = "CFEA";
+        public const string EnemySecondaryType = "CFEB";
+
+        public const string BattleType = "D057";
+        public const string TurnNumber = "CCD5";
+
         public const string PlayerBattleMove = "CCDC";
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Linq;
 
-namespace ProjectDMG.PokemonRedElasticsearchIntegration
+namespace ProjectDMG.PokemonRedElasticsearchIntegration.Converters
 {
     /// <summary>
     /// Based on https://bulbapedia.bulbagarden.net/wiki/Character_encoding_(Generation_I).

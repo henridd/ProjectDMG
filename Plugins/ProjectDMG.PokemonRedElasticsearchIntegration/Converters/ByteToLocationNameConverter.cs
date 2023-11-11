@@ -1,4 +1,4 @@
-﻿namespace ProjectDMG.PokemonRedElasticsearchIntegration
+﻿namespace ProjectDMG.PokemonRedElasticsearchIntegration.Converters
 {
     /// <summary>
     /// Source: https://glitchcity.wiki/wiki/List_of_maps_by_index_number_(Generation_I)
