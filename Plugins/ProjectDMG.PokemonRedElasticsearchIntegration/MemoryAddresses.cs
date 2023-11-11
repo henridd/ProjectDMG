@@ -1,5 +1,8 @@
 ﻿namespace ProjectDMG.PokemonRedElasticsearchIntegration
 {
+    /// <summary>
+    /// Obtained from https://datacrystal.romhacking.net/wiki/Pok%C3%A9mon_Red/Blue:RAM_map
+    /// </summary>
     internal static class MemoryAddresses
     {
         public const string Money1 = "D347";
