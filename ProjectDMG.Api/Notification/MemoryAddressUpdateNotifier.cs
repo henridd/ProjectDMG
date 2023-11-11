@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectDMG.Api.Models;
+using ProjectDMG.Api.Notification.Structs;
 
 namespace ProjectDMG.Api.Notifications
 {

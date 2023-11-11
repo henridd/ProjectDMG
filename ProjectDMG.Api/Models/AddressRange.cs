@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ProjectDMG.Api
+namespace ProjectDMG.Api.Models
 {
     public readonly struct AddressRange : IEquatable<AddressRange>
     {

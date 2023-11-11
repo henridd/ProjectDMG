@@ -1,4 +1,6 @@
 ﻿using ProjectDMG.Api;
+using ProjectDMG.Api.Models;
+using ProjectDMG.Api.Notification.Structs;
 using ProjectDMG.Api.Notifications;
 using ProjectDMG.PokemonRedElasticsearchIntegration.Converters;
 using System.Diagnostics;

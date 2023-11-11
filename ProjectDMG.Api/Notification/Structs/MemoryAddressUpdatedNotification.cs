@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using ProjectDMG.Api.Models;
 
-namespace ProjectDMG.Api.Notifications
+namespace ProjectDMG.Api.Notification.Structs
 {
     public readonly struct MemoryAddressUpdatedNotification
     {

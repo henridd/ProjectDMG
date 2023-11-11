@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ProjectDMG.Api
+namespace ProjectDMG.Api.Models
 {
     public readonly struct AddressRangeValue
     {
