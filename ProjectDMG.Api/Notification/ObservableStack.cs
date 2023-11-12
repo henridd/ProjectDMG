@@ -32,7 +32,7 @@ namespace ProjectDMG.Api.Notifications
             return stack.Peek();
         }        
 
-        protected virtual void OnItemAdded(ItemAddedEventArgs<T> e)
+        private void OnItemAdded(ItemAddedEventArgs<T> e)
         {
             ItemAdded?.Invoke(this, e);
         }
