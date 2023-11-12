@@ -2,8 +2,6 @@
 
 **ProjectDMG is a C# coded emulator of the Nintendo Game Boy wich was originally codenamed Dot Matrix Game (DMG).**
 
-*This is a personal project with the scope to learn about hardware and the development of emulators.*
-
 ProjectDMG dosn't use any external dependency and uses rather simplistyc C# code.
 
 All the CPU opcodes are implemented and it passes Blaarg tests.
@@ -11,6 +9,37 @@ The emulator have accurate cycle timings to the opcode degree. Including Game Bo
 
 > **Note:**  This is not a M-Cycle or micro-ops accurate emulator.
 > Accuracy and syncronization between the various hardware subsystems as the Pixel Processing Unit (PPU), the Memory Managemet Unit (MMU) or the Timer relies on hardcoded fixed values and varies from 4 to 24 CPU cycles depending on the executed Opcode or hardware interrupts.
+
+## Using the emulator
+
+Execute the emulator and drag and drop a valid Game Boy rom dump to the GUI. The Game Boy will power on and begin execution.
+
+> **Note:**  A valid Game Boy BootRom/BIOS file is not needed anymore. The CPU and MMU defaults to post BootRom init values.
+ 
+Once power on, Input is mapped as:
+
+* D-Pad UP: **Up** or **W**
+* D-Pad Left: **Left** or **A**
+* D-Pad Down: **Down** or **S**
+* D-Pad Right: **Right** or **D**
+* A: **Z** or **J**
+* B: **X** or **K**
+* Start: **V** or **Enter**
+* Select: **C** or **Space**
+* Save state: **CTRL+1-3**
+* Load state: **CTRL+Shift+1-3**
+
+## Tracking values in memory
+
+The ProjectDMG.API supports subscribing to address ranges to keep track of values. More information can be found at: https://intodot.net/implementing-saving-and-loading-of-states-in-a-c-gb-emulator/
+
+## Creating a plugin
+
+Follow the steps below to create a new plugin and track your own addresses:
+* Create a new project
+* Create a class that inherits from ProjectDMGPlugin
+* Set the following post-build event: 
+* * copy /Y "$(TargetDir)$(ProjectName).dll" "$(SolutionDir)PluginsDlls\$(ProjectName).dll"
 
 ## Compability
 
@@ -32,28 +61,6 @@ Game Boy catalog compatibility should be around +95% as the support have focused
 |19h  MBC5  | FDh  BANDAI TAMA5 |
 |1Ah  MBC5+RAM  | FEh  HuC3 |
 |1Bh  MBC5+RAM+BATTERY  |  FFh  HuC1+RAM+BATTERY |
-
-> **Note:**  SRAM save files are not supported at the moment so your progress on games will be lost on exit.
-
-
-## Using the emulator
-
-Execute the emulator and drag and drop a valid Game Boy rom dump to the GUI. The Game Boy will power on and begin execution.
-
-> **Note:**  A valid Game Boy BootRom/BIOS file is not needed anymore. The CPU and MMU defaults to post BootRom init values.
- 
-Once power on, Input is mapped as:
-
-* D-Pad UP: **Up** or **W**
-* D-Pad Left: **Left** or **A**
-* D-Pad Down: **Down** or **S**
-* D-Pad Right: **Right** or **D**
-* A: **Z** or **J**
-* B: **X** or **K**
-* Start: **V** or **Enter**
-* Select: **C** or **Space**
-* Save state: **CTRL+1-3**
-* Load state: **CTRL+Shift+1-3**
 
 ## Screenshots
 
