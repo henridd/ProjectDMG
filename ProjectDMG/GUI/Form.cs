@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -6,7 +7,7 @@ namespace ProjectDMG {
     public partial class Form : System.Windows.Forms.Form {
 
         ProjectDMG dmg;
-        private string romPath = "G:\\Desenvolvimento\\CSharp\\ProjectDMG\\Roms\\PokemonRed.gb";
+        private string defaultRomPath = "G:\\Desenvolvimento\\CSharp\\ProjectDMG\\Roms\\PokemonRed.gb";
 
         public Form() {
             InitializeComponent();
@@ -14,7 +15,10 @@ namespace ProjectDMG {
 
         private void Form_Load(object sender, EventArgs e) {
             dmg = new ProjectDMG(this);
-            dmg.POWER_ON(romPath);
+            if(Path.Exists(defaultRomPath))
+            {
+                dmg.POWER_ON(defaultRomPath);
+            }
         }
 
         private void Key_Down(object sender, KeyEventArgs e) {
@@ -65,7 +69,7 @@ namespace ProjectDMG {
             while (dmg.IsRunning)
                 Thread.Sleep(100);
 
-            dmg.POWER_ON(romPath, state);
+            dmg.POWER_ON(defaultRomPath, state);
         }
 
         private void SaveState(string fileName)
