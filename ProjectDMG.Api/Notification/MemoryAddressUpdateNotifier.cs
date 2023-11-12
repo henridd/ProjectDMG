@@ -57,10 +57,8 @@ namespace ProjectDMG.Api.Notifications
 
                 if(_remainingAddressToUpdate[id].Count == 0)
                 {
-                    if (notification.AddressesValues[subscribedAddress].PreviousValue != notification.AddressesValues[subscribedAddress].NewValue)
-                    {
-                        _channels[id].Push(notification);
-                    }
+                    //TODO implement optional validation for not sending notifications when the value haven't changed
+                    _channels[id].Push(notification);
 
                     _remainingAddressToUpdate.Remove(id);
                 }
