@@ -25,8 +25,12 @@ namespace ProjectDMG.Api.Notifications
 
         public ObservableStack<MemoryAddressUpdatedNotification> AddSubscription(AddressRange subscribedAddresses, IEnumerable<AddressRange> relevantAddresses)
         {
-            if (!_addressSubscriptions.ContainsKey(subscribedAddresses))
-                _addressSubscriptions.Add(subscribedAddresses, new List<MemoryAddressSubscription>());
+            if (_addressSubscriptions.ContainsKey(subscribedAddresses))
+            {
+                throw new InvalidOperationException("Subscribing to the same range is not allowed.");
+            }
+
+            _addressSubscriptions.Add(subscribedAddresses, new List<MemoryAddressSubscription>());
 
             var subscription = CreateSubscription(subscribedAddresses, relevantAddresses);
 
