@@ -9,7 +9,7 @@ namespace ProjectDMG.Api.Notifications
     internal class MemoryAddressUpdateNotifier : IDisposable
     {
         private readonly Dictionary<int, ObservableStack<MemoryAddressUpdatedNotification>> _channels = new();
-        private readonly Dictionary<int, QueuedNotification> _queuedNotifications = new();
+        private readonly Dictionary<int, HashSet<ushort>> _remainingAddressToUpdate = new();
         private object _lock = new object();
 
         public ObservableStack<MemoryAddressUpdatedNotification> AddChannel(int id)
@@ -48,21 +48,21 @@ namespace ProjectDMG.Api.Notifications
         {
             lock (_lock)
             {
-                if(!_queuedNotifications.ContainsKey(id))
+                if(!_remainingAddressToUpdate.ContainsKey(id))
                 {
-                    _queuedNotifications.Add(id, new(id, notification, subscribedAddress));
+                    _remainingAddressToUpdate.Add(id, new(subscribedAddress.MemoryAddresses));
                 }
 
-                _queuedNotifications[id].RemainingAddressesToUpdate.Remove(updatedAddress);
+                _remainingAddressToUpdate[id].Remove(updatedAddress);
 
-                if(_queuedNotifications[id].RemainingAddressesToUpdate.Count == 0)
+                if(_remainingAddressToUpdate[id].Count == 0)
                 {
                     if (notification.AddressesValues[subscribedAddress].PreviousValue != notification.AddressesValues[subscribedAddress].NewValue)
                     {
                         _channels[id].Push(notification);
                     }
 
-                    _queuedNotifications.Remove(id);
+                    _remainingAddressToUpdate.Remove(id);
                 }
             }
         }
@@ -70,20 +70,6 @@ namespace ProjectDMG.Api.Notifications
         public void Dispose()
         {
             _channels.Clear();
-        }
-
-        private readonly struct QueuedNotification
-        {
-            public int Channel { get; }
-            public MemoryAddressUpdatedNotification Notification { get; }
-            public HashSet<ushort> RemainingAddressesToUpdate { get; }
-
-            public QueuedNotification(int channel, MemoryAddressUpdatedNotification notification, AddressRange addressRange)
-            {
-                Channel = channel;
-                Notification = notification;
-                RemainingAddressesToUpdate = new HashSet<ushort>(addressRange.MemoryAddresses);
-            }
         }
     }
 }
