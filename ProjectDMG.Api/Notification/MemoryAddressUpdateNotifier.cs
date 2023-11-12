@@ -30,7 +30,7 @@ namespace ProjectDMG.Api.Notifications
                         GetPreviousValue(x.AddressRange),
                         x.Values.ToArray())));
 
-            AddNotificationToQueue(id, subscribedAddress, notification, updatedAddress);
+            SendNotificationIfAllAddressesUpdated(id, subscribedAddress, notification, updatedAddress);
 
             byte[] GetPreviousValue(AddressRange address)
             {
@@ -44,7 +44,7 @@ namespace ProjectDMG.Api.Notifications
             }
         }
 
-        private void AddNotificationToQueue(int id, AddressRange subscribedAddress, MemoryAddressUpdatedNotification notification, ushort updatedAddress)
+        private void SendNotificationIfAllAddressesUpdated(int id, AddressRange subscribedAddress, MemoryAddressUpdatedNotification notification, ushort updatedAddress)
         {
             lock (_lock)
             {
