@@ -30,11 +30,6 @@ namespace ProjectDMG.Api.Notifications
                         GetPreviousValue(x.AddressRange),
                         x.Values.ToArray())));
 
-            if (notification.AddressesValues[subscribedAddress].PreviousValue == notification.AddressesValues[subscribedAddress].NewValue)
-            {
-                return;
-            }
-
             AddNotificationToQueue(id, subscribedAddress, notification, updatedAddress);
 
             byte[] GetPreviousValue(AddressRange address)
@@ -62,7 +57,11 @@ namespace ProjectDMG.Api.Notifications
 
                 if(_queuedNotifications[id].RemainingAddressesToUpdate.Count == 0)
                 {
-                    _channels[id].Push(notification);
+                    if (notification.AddressesValues[subscribedAddress].PreviousValue != notification.AddressesValues[subscribedAddress].NewValue)
+                    {
+                        _channels[id].Push(notification);
+                    }
+
                     _queuedNotifications.Remove(id);
                 }
             }
