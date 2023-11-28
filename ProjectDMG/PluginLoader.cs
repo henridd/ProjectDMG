@@ -22,6 +22,7 @@ namespace ProjectDMG
                 {
                     try
                     {
+                        // TODO: It doesn't work when the assembly has NuGet packages.
                         var assembly = Assembly.LoadFrom(dllFile);
                         foreach (var pluginType in assembly.GetTypes().Where(t => pluginInterface.IsAssignableFrom(t) && !t.IsAbstract))
                             ((ProjectDMGPlugin)Activator.CreateInstance(pluginType)).Run();
