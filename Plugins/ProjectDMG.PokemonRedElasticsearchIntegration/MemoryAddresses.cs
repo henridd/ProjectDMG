@@ -27,10 +27,12 @@
 
         public const string EnemyCatchRate = "D007";
         public const string EnemyHP = "CFE7";
-        public const string EnemyLevel = "CFE8";
+        public const string EnemyWildLevel = "CFF3";
         public const string EnemyPrimaryType = "CFEA";
         public const string EnemySecondaryType = "CFEB";
 
+
+        public const string EnemyTrainerLevel = "CFE8";
         public const string BattleType = "D057";
         public const string TurnNumber = "CCD5";
 

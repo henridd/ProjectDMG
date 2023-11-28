@@ -1,9 +1,12 @@
-﻿using ProjectDMG.Api;
+﻿using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
+using ProjectDMG.Api;
 using ProjectDMG.Api.Models;
 using ProjectDMG.Api.Notification.Structs;
 using ProjectDMG.Api.Notifications;
 using ProjectDMG.PokemonRedElasticsearchIntegration.Converters;
-using System.Diagnostics;
+using ProjectDMG.PokemonRedElasticsearchIntegration.Elasticsearch;
+using System;
 using System.Linq;
 
 namespace ProjectDMG.PokemonRedElasticsearchIntegration
@@ -11,14 +14,21 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
     public class Bootstrapper : ProjectDMGPlugin
     {
         private AddressRange _enemyPokemonNameAddressRange;
-        private AddressRange _moneyAddressRange;
+        private ElasticsearchClient _elasticsearchClient;
+        private PokedexIndexer _pokedexIndexer;
+        private IMemoryWatcher _memoryWatcher;
 
         public override void Run()
         {
-            var memoryWatcher = MemoryWatcherProvider.GetInstance();
+            Initialize();
 
+            AddBattleStartedSubscription();
+        }
+
+        private void AddBattleStartedSubscription()
+        {
             _enemyPokemonNameAddressRange = new AddressRange(new[]
-            {
+                        {
                 MemoryAddresses.EnemyName1,
                 MemoryAddresses.EnemyName2,
                 MemoryAddresses.EnemyName3,
@@ -30,29 +40,71 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
                 MemoryAddresses.EnemyName9,
                 MemoryAddresses.EnemyName10,
             });
-            memoryWatcher.AddSubscription(_enemyPokemonNameAddressRange, new AddressRange[1] { MemoryAddresses.CurrentMap }).ItemAdded += EnemyNameChanged;
 
-            _moneyAddressRange = new AddressRange(new[]
+            var relevantAddresses = new AddressRange[]
             {
-                MemoryAddresses.Money1,
-                MemoryAddresses.Money2,
-                MemoryAddresses.Money3
-            });
-            memoryWatcher.AddSubscription(_moneyAddressRange, null).ItemAdded += MoneyChanged;
+                MemoryAddresses.CurrentMap,
+                MemoryAddresses.EnemyCatchRate,
+                MemoryAddresses.EnemyWildLevel,
+                MemoryAddresses.EnemyPrimaryType,
+                MemoryAddresses.EnemySecondaryType,
+                MemoryAddresses.BattleType
+            };
+
+            _memoryWatcher.AddSubscription(_enemyPokemonNameAddressRange, relevantAddresses).ItemAdded += PokemonNameChanged;
         }
 
-        private void MoneyChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
+        private void Initialize()
         {
-            var newHexValues = e.Item.AddressesValues[_moneyAddressRange].NewValue.Select(x => x.ToString("X"));
-            var moneyInString = string.Join(string.Empty, newHexValues);
-
-            Debug.WriteLine($"Your money has changed! New value: {int.Parse(moneyInString)}");
+            _memoryWatcher = MemoryWatcherProvider.GetInstance();
+            _elasticsearchClient = CreateElasticsearchClient();
+            _pokedexIndexer = new PokedexIndexer(_elasticsearchClient);
         }
 
-        private void EnemyNameChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
+        private ElasticsearchClient CreateElasticsearchClient()
         {
-            Debug.WriteLine($"Enemy found: {ByteToCharConverter.Convert(e.Item.AddressesValues[_enemyPokemonNameAddressRange].NewValue)}" +
-                $" on map {ByteToLocationNameConverter.Convert(e.Item.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First())}");
+            var settings = new ElasticsearchClientSettings(new Uri("https://localhost:9200"))
+                .ServerCertificateValidationCallback((_, _, _, _) => true) // Beware: very risky! 
+                .Authentication(new BasicAuthentication("elastic", "elastic"));
+            return new ElasticsearchClient(settings);
+        }
+
+        private void PokemonNameChanged(object? sender, ItemAddedEventArgs<MemoryAddressUpdatedNotification> e)
+        {
+            var pokemonInformation = CreatePokemonInformation(e.Item);
+
+            if (string.IsNullOrWhiteSpace(pokemonInformation.PokemonName))
+            {
+                return;
+            }
+
+            _pokedexIndexer.Index(pokemonInformation);
+        }
+
+        private PokemonInformation CreatePokemonInformation(MemoryAddressUpdatedNotification notification)
+        {
+            var primaryType = GetPokemonType(notification, MemoryAddresses.EnemyPrimaryType)!;
+            var secondaryType = GetPokemonType(notification, MemoryAddresses.EnemySecondaryType)!;
+
+            if (secondaryType == primaryType)
+            {
+                secondaryType = null;
+            }
+
+            var battleType = notification.AddressesValues[MemoryAddresses.BattleType].NewValue.First();
+
+            return new PokemonInformation(ByteToLocationNameConverter.Convert(notification.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First()),
+                ByteToCharConverter.Convert(notification.AddressesValues[_enemyPokemonNameAddressRange].NewValue),
+                notification.AddressesValues[MemoryAddresses.EnemyWildLevel].NewValue.First(),
+                notification.AddressesValues[MemoryAddresses.EnemyCatchRate].NewValue.First(),
+                primaryType,
+                secondaryType,
+                battleType);
+        }
+
+        private string? GetPokemonType(MemoryAddressUpdatedNotification notification, AddressRange addressRange)
+        {
+            return ByteToPokemonTypeConverter.Convert(notification.AddressesValues[addressRange].NewValue.First());
         }
     }
 }

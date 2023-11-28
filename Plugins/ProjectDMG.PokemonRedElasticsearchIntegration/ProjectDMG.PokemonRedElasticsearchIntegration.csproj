@@ -10,6 +10,10 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\ProjectDMG.Api\ProjectDMG.Api.csproj" />
   </ItemGroup>
 
