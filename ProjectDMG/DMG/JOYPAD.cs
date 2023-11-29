@@ -1,5 +1,4 @@
-﻿using System.Windows.Forms;
-using static ProjectDMG.Utils.BitOps;
+﻿using static ProjectDMG.Utils.BitOps;
 
 namespace ProjectDMG {
     public class JOYPAD {
@@ -43,36 +42,36 @@ namespace ProjectDMG {
 
         private byte GetKeyBit(KeyEventArgs e) {
             switch (e.KeyCode) {
-                case Keys.D:
-                case Keys.Right:
+                case Key.D:
+                case Key.Right:
                     return 0x11;
 
-                case Keys.A:
-                case Keys.Left:
+                case Key.A:
+                case Key.Left:
                     return 0x12;
 
-                case Keys.W:
-                case Keys.Up:
+                case Key.W:
+                case Key.Up:
                     return 0x14;
 
-                case Keys.S:
-                case Keys.Down:
+                case Key.S:
+                case Key.Down:
                     return 0x18;
 
-                case Keys.J:
-                case Keys.Z:
+                case Key.J:
+                case Key.Z:
                     return 0x21;
 
-                case Keys.K:
-                case Keys.X:
+                case Key.K:
+                case Key.X:
                     return 0x22;
 
-                case Keys.Space:
-                case Keys.C:
+                case Key.Space:
+                case Key.C:
                     return 0x24;
 
-                case Keys.Enter:
-                case Keys.V:
+                case Key.Enter:
+                case Key.V:
                     return 0x28;
             }
             return 0;

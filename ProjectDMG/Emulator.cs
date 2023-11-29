@@ -1,22 +1,19 @@
 ﻿using ProjectDMG.Api.Notifications;
+using ProjectDMG.DMG;
 using ProjectDMG.DMG.State;
 using ProjectDMG.DMG.State.DataStructures;
 using ProjectDMG.Utils;
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProjectDMG
 {
-    public class ProjectDMG
+    public class Emulator
     {
-
-        Form window;
-
-        public ProjectDMG(Form window)
-        {
-            this.window = window;
-        }
+        private IGUI gui;
+        private string currentCartPath;
 
         private CPU cpu;
         private MMU mmu;
@@ -33,15 +30,21 @@ namespace ProjectDMG
 
         public bool IsRunning { get; private set; }
 
-        internal void POWER_ON(string cartName)
+        public Emulator(IGUI gui)
+        {
+            this.gui = gui;
+        }
+
+        public void POWER_ON(string cartName)
             => POWER_ON(cartName, null);
 
         internal void POWER_ON(string cartName, SavedState state)
         {
+            currentCartPath = cartName;
             memoryWatcher = MemoryWatcherProvider.GetInstance();
             mmu = new MMU(memoryWatcher, state?.MMUSavedState);
             cpu = new CPU(mmu, state?.CPUSavedState);
-            ppu = new PPU(window, state?.PPUSavedState);
+            ppu = new PPU(gui, state?.PPUSavedState);
             timer = new TIMER(state?.TimerSavedState);
             joypad = new JOYPAD();
             saveStateManager = new SaveStateManager();
@@ -108,6 +111,12 @@ namespace ProjectDMG
             IsRunning = false;
         }
 
+        public void HandleKeyDown(KeyEventArgs keyEventArgs)
+            => joypad.handleKeyDown(keyEventArgs);
+
+        public void HandleKeyUp(KeyEventArgs keyEventArgs)
+            => joypad.handleKeyUp(keyEventArgs);
+
         private void handleInterrupts()
         {
             byte IE = mmu.IE;
@@ -131,7 +140,7 @@ namespace ProjectDMG
             return nano;
         }
 
-        internal void GenerateSaveState(string fileName)
+        public void GenerateSaveState(string fileName)
         {
             lock (saveLock)
             {
@@ -144,9 +153,15 @@ namespace ProjectDMG
             }
         }
 
-        internal SavedState LoadSavedState(string fileName)
+        public void LoadSavedState(string fileName)
         {
-            return saveStateManager.LoadSavedState(fileName);
+            POWER_OFF();
+            var state = saveStateManager.LoadSavedState(fileName);
+
+            while (IsRunning)
+                Thread.Sleep(100);
+
+            POWER_ON(currentCartPath, state);
         }
     }
 }

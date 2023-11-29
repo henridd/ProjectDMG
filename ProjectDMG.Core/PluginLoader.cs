@@ -1,10 +1,7 @@
 ﻿using ProjectDMG.Api;
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 
-namespace ProjectDMG
+namespace ProjectDMG.Core
 {
     internal static class PluginLoader
     {
