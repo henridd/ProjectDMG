@@ -37,6 +37,14 @@ namespace ProjectDMG.Core
             this.gui = gui;
         }
 
+        public void Shutdown()
+        {
+            POWER_OFF();
+
+            while (IsRunning)
+                Thread.Sleep(100);
+        }
+
         public void POWER_ON(string cartName)
             => POWER_ON(cartName, null);
 
@@ -65,7 +73,7 @@ namespace ProjectDMG.Core
             Task t = Task.Factory.StartNew(EXECUTE, TaskCreationOptions.LongRunning);
         }
 
-        public void POWER_OFF()
+        private void POWER_OFF()
         {
             power_switch = false;
             foreach (var plugin in loadedPlugins)
@@ -161,11 +169,9 @@ namespace ProjectDMG.Core
 
         public void LoadSavedState(string fileName)
         {
-            POWER_OFF();
-            var state = saveStateManager.LoadSavedState(fileName);
+            Shutdown();
 
-            while (IsRunning)
-                Thread.Sleep(100);
+            var state = saveStateManager.LoadSavedState(fileName);
 
             POWER_ON(currentCartPath, state);
         }

@@ -1,4 +1,5 @@
-﻿using ProjectDMG.Core;
+﻿using Microsoft.Win32;
+using ProjectDMG.Core;
 using ProjectDMG.Core.DMG;
 using ProjectDMG.GUI.Wpf.Converters;
 using System.Drawing;
@@ -37,9 +38,20 @@ namespace ProjectDMG.GUI.Wpf
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             _dmg = new Emulator(this);
-            if (Path.Exists(_defaultRomPath))
+
+            StartEmulator(_defaultRomPath);
+        }
+
+        private void StartEmulator(string gamePath)
+        {
+            if (_dmg.IsRunning)
             {
-                _dmg.POWER_ON(_defaultRomPath);
+                _dmg.Shutdown();
+            }
+
+            if (Path.Exists(gamePath))
+            {
+                _dmg.POWER_ON(gamePath);
             }
             this.Focus();
         }
@@ -107,6 +119,19 @@ namespace ProjectDMG.GUI.Wpf
             {
                 _dmg.HandleKeyUp(KeyToKeyBitConverter.GetKeyBit(e.Key));
             }
+        }
+
+        private void LoadMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog();
+            ofd.ShowDialog();
+
+            if (string.IsNullOrEmpty(ofd.FileName))
+            {
+                return;
+            }
+
+            StartEmulator(ofd.FileName);
         }
 
         //private void Drag_Drop(object sender, DragEventArgs e)

@@ -8,9 +8,14 @@
         mc:Ignorable="d"
         x:ClassModifier="internal"
         Title="ProjectDMG" Height="576" Width="640">
-    <Grid>
-        <WindowsFormsHost>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Load" Click="LoadMenuItem_Click"/>
+            </MenuItem>
+        </Menu>
+        <WindowsFormsHost DockPanel.Dock="Bottom">
             <wf:PictureBox x:Name="emulatorScreen" SizeMode="Zoom" Size="288, 320" />
         </WindowsFormsHost>
-    </Grid>
+    </DockPanel>
 </Window>
