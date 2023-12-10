@@ -11,7 +11,7 @@ namespace ProjectDMG.GUI.Wpf
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IGui
+    internal partial class MainWindow : Window, IGui
     {
         private Emulator _dmg;
         private string _defaultRomPath = "G:\\Desenvolvimento\\CSharp\\ProjectDMG\\Roms\\PokemonRed.gb";
@@ -41,6 +41,7 @@ namespace ProjectDMG.GUI.Wpf
             {
                 _dmg.POWER_ON(_defaultRomPath);
             }
+            this.Focus();
         }
 
         private void Key_Down(object sender, KeyEventArgs e)

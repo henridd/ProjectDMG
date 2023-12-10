@@ -1,4 +1,5 @@
-﻿using ProjectDMG.Api.Notifications;
+﻿using ProjectDMG.Api;
+using ProjectDMG.Api.Notifications;
 using ProjectDMG.Core.DMG;
 using ProjectDMG.Core.DMG.State;
 using ProjectDMG.Core.DMG.State.DataStructures;
@@ -22,6 +23,7 @@ namespace ProjectDMG.Core
         public JOYPAD joypad;
         private SaveStateManager saveStateManager;
         private IMemoryWatcher memoryWatcher;
+        private IEnumerable<ProjectDMGPlugin> loadedPlugins;
 
         public bool power_switch;
         private int cpuCycles;
@@ -51,7 +53,7 @@ namespace ProjectDMG.Core
 
             mmu.loadGamePak(cartName, state?.GamePakSavedState);
 
-            PluginLoader.Load();
+            loadedPlugins = PluginLoader.Load();
 
             power_switch = true;
 
@@ -66,6 +68,10 @@ namespace ProjectDMG.Core
         public void POWER_OFF()
         {
             power_switch = false;
+            foreach (var plugin in loadedPlugins)
+            {
+                plugin.Dispose();
+            }
         }
 
         int fpsCounter;

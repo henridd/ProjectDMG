@@ -1,0 +1,18 @@
+﻿<Window x:Class="ProjectDMG.PokemonRedElasticsearchIntegration.Pokedex.PokedexWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProjectDMG.PokemonRedElasticsearchIntegration.Pokedex"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        mc:Ignorable="d"
+        x:ClassModifier="internal"
+        Title="Pokedex" Height="665" Width="1253">
+    <!--Credits to u/Jaxtronaut for the background image (https://www.reddit.com/r/3DS/comments/t4gvzp/custom_3ds_borders_for_pokemon_yellow_gbc/) -->
+    <Window.Background>
+        <ImageBrush ImageSource="Images/background.jpg"/>
+    </Window.Background>
+    <Grid>
+        <wv2:WebView2 Name="pokedexBrowser" Height="370" Width="500" />
+    </Grid>
+</Window>

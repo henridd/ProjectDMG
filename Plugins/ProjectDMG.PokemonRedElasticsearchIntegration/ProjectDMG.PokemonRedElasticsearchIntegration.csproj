@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
+    <UseWPF>True</UseWPF>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
@@ -10,11 +11,35 @@
   </Target>
 
   <ItemGroup>
+    <None Remove="Pokedex\Html\Body.html" />
+    <None Remove="Pokedex\Html\Head.html" />
+    <None Remove="Pokedex\Html\Style.html" />
+    <None Remove="Pokedex\Images\background.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Pokedex\Html\Body.html" />
+    <EmbeddedResource Include="Pokedex\Html\Head.html" />
+    <EmbeddedResource Include="Pokedex\Html\Style.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.11.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2151.40" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\ProjectDMG.Api\ProjectDMG.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Pokedex\Images\background.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Window1.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
   </ItemGroup>
 
 </Project>

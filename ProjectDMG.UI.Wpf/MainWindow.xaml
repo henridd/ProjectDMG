@@ -6,10 +6,11 @@
         xmlns:local="clr-namespace:ProjectDMG.GUI.Wpf"
         xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         mc:Ignorable="d"
-        Title="MainWindow" Height="320" Width="288">
+        x:ClassModifier="internal"
+        Title="ProjectDMG" Height="576" Width="640">
     <Grid>
         <WindowsFormsHost>
-            <wf:PictureBox x:Name="emulatorScreen" SizeMode="Zoom" Size="320, 288" />
+            <wf:PictureBox x:Name="emulatorScreen" SizeMode="Zoom" Size="288, 320" />
         </WindowsFormsHost>
     </Grid>
 </Window>

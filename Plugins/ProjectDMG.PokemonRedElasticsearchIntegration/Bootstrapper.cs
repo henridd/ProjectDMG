@@ -6,8 +6,10 @@ using ProjectDMG.Api.Notification.Structs;
 using ProjectDMG.Api.Notifications;
 using ProjectDMG.PokemonRedElasticsearchIntegration.Converters;
 using ProjectDMG.PokemonRedElasticsearchIntegration.Elasticsearch;
+using ProjectDMG.PokemonRedElasticsearchIntegration.Pokedex;
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace ProjectDMG.PokemonRedElasticsearchIntegration
 {
@@ -16,6 +18,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
         private AddressRange _enemyPokemonNameAddressRange;
         private ElasticsearchClient _elasticsearchClient;
         private PokedexIndexer _pokedexIndexer;
+        private PokedexWindow _pokedexWindow;
         private IMemoryWatcher _memoryWatcher;
 
         public override void Run()
@@ -28,7 +31,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
         private void AddBattleStartedSubscription()
         {
             _enemyPokemonNameAddressRange = new AddressRange(new[]
-                        {
+            {
                 MemoryAddresses.EnemyName1,
                 MemoryAddresses.EnemyName2,
                 MemoryAddresses.EnemyName3,
@@ -59,6 +62,13 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
             _memoryWatcher = MemoryWatcherProvider.GetInstance();
             _elasticsearchClient = CreateElasticsearchClient();
             _pokedexIndexer = new PokedexIndexer(_elasticsearchClient);
+            InitializeHtmlPokedex();
+        }
+
+        private void InitializeHtmlPokedex()
+        {
+            _pokedexWindow = new PokedexWindow();
+            _pokedexWindow.Show();
         }
 
         private ElasticsearchClient CreateElasticsearchClient()
@@ -73,16 +83,25 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
         {
             var pokemonInformation = CreatePokemonInformation(e.Item);
 
-            if (string.IsNullOrWhiteSpace(pokemonInformation.PokemonName))
+            _pokedexWindow.UpdatePokemon(pokemonInformation);
+
+            if (pokemonInformation == null)
             {
                 return;
             }
 
-            _pokedexIndexer.Index(pokemonInformation);
+            _pokedexIndexer.Index(pokemonInformation.Value);
         }
 
-        private PokemonInformation CreatePokemonInformation(MemoryAddressUpdatedNotification notification)
+        private PokemonInformation? CreatePokemonInformation(MemoryAddressUpdatedNotification notification)
         {
+            var pokemonName = ByteToCharConverter.Convert(notification.AddressesValues[_enemyPokemonNameAddressRange].NewValue).Trim();
+
+            if (string.IsNullOrWhiteSpace(pokemonName))
+            {
+                return null;
+            }
+
             var primaryType = GetPokemonType(notification, MemoryAddresses.EnemyPrimaryType)!;
             var secondaryType = GetPokemonType(notification, MemoryAddresses.EnemySecondaryType)!;
 
@@ -94,7 +113,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
             var battleType = notification.AddressesValues[MemoryAddresses.BattleType].NewValue.First();
 
             return new PokemonInformation(ByteToLocationNameConverter.Convert(notification.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First()),
-                ByteToCharConverter.Convert(notification.AddressesValues[_enemyPokemonNameAddressRange].NewValue),
+                pokemonName,
                 notification.AddressesValues[MemoryAddresses.EnemyWildLevel].NewValue.First(),
                 notification.AddressesValues[MemoryAddresses.EnemyCatchRate].NewValue.First(),
                 primaryType,
@@ -105,6 +124,11 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
         private string? GetPokemonType(MemoryAddressUpdatedNotification notification, AddressRange addressRange)
         {
             return ByteToPokemonTypeConverter.Convert(notification.AddressesValues[addressRange].NewValue.First());
+        }
+
+        public override void Dispose()
+        {
+            _pokedexWindow?.Close();
         }
     }
 }
