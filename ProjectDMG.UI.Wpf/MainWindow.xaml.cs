@@ -76,6 +76,7 @@ namespace ProjectDMG.GUI.Wpf
             if (_dmg.power_switch)
             {
                 _dmg.HandleKeyDown(KeyToKeyBitConverter.GetKeyBit(e.Key));
+                e.Handled = true;
             }
         }
 
