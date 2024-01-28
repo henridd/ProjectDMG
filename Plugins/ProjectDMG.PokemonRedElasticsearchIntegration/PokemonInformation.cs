@@ -13,7 +13,7 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
         public bool IsWildPokemon { get; }
         public bool IsTrainerBattle { get; }
 
-        public PokemonInformation(string foundAt, string pokemonName, int level, int catchRate, string primaryType, string? secondaryType, int battleType)
+        public PokemonInformation(string foundAt, string pokemonName, int level, int catchRate, string primaryType, string? secondaryType, bool isWildPokemon, bool isTrainerBattle)
         {
             FoundAt = foundAt;
             PokemonName = pokemonName;
@@ -21,16 +21,8 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
             CatchRate = catchRate;
             PrimaryType = primaryType;
             SecondaryType = secondaryType;
-
-            switch (battleType)
-            {
-                case 1:
-                    IsWildPokemon = true;
-                    break;
-                case 2:
-                    IsTrainerBattle = true;
-                    break;
-            }
+            IsWildPokemon = isWildPokemon;
+            IsTrainerBattle = isTrainerBattle;
         }
     }
 }

@@ -111,6 +111,17 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
             }
 
             var battleType = notification.AddressesValues[MemoryAddresses.BattleType].NewValue.First();
+            var isWildPokemon = false;
+            var isTrainerBattle = false;
+            switch (battleType)
+            {
+                case 1:
+                    isWildPokemon = true;
+                    break;
+                case 2:
+                    isTrainerBattle = true;
+                    break;
+            }
 
             return new PokemonInformation(ByteToLocationNameConverter.Convert(notification.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First()),
                 pokemonName,
@@ -118,7 +129,8 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
                 notification.AddressesValues[MemoryAddresses.EnemyCatchRate].NewValue.First(),
                 primaryType,
                 secondaryType,
-                battleType);
+                isWildPokemon,
+                isTrainerBattle);
         }
 
         private string? GetPokemonType(MemoryAddressUpdatedNotification notification, AddressRange addressRange)
