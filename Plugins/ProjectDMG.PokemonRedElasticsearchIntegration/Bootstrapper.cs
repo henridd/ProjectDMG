@@ -123,7 +123,8 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration
                     break;
             }
 
-            return new PokemonInformation(ByteToLocationNameConverter.Convert(notification.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First()),
+            return new PokemonInformation(PokemonNameToNumberConverter.Convert(pokemonName),
+                PokemonLocationFactory.Create(notification.AddressesValues[MemoryAddresses.CurrentMap].NewValue.First()),
                 pokemonName,
                 notification.AddressesValues[MemoryAddresses.EnemyWildLevel].NewValue.First(),
                 notification.AddressesValues[MemoryAddresses.EnemyCatchRate].NewValue.First(),

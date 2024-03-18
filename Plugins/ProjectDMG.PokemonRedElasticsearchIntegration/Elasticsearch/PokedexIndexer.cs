@@ -26,7 +26,9 @@ namespace ProjectDMG.PokemonRedElasticsearchIntegration.Elasticsearch
                 .Mappings(m =>
                     m.Properties<PokemonInformation>(prop =>
                         prop.Keyword(pkm => pkm.FoundAt)
-                            .Text(pkm => pkm.PokemonName)
+                            .GeoPoint(pkm => pkm.GeoLocation)
+                            .Keyword(pkm => pkm.PokemonName) // Not using text so it can be used as a label
+                            .ByteNumber(pkm => pkm.Number)
                             .IntegerNumber(pkm => pkm.CatchRate)
                             .IntegerNumber(pkm => pkm.Level)
                             .Keyword(pkm => pkm.PrimaryType)
