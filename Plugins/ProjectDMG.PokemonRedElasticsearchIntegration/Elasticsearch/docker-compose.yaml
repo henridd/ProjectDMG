@@ -150,6 +150,7 @@ services:
 
   geoserver-db:
     image: kartoza/postgis:${POSTGIS_VERSION_TAG}
+    profiles: [maps]
     volumes:
       - geo-db-data:/var/lib/postgresql
     ports:
@@ -165,6 +166,7 @@ services:
 
   geoserver:
     image: kartoza/geoserver:${GS_VERSION}
+    profiles: [maps]
     volumes:
       - geoserver-data:/opt/geoserver/data_dir
     ports:
